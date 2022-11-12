@@ -18,7 +18,7 @@ class Expense:
             name (str, optional): Назва позиції.Якщо не вказано: Без назви\n
             cost (float, optional): Ціна. Якщо не вказано: 0\n
             date (str, optional): Дата: <день.місяць.рік>. Якщо не вказано: сьогодні.\n
-            type (str, optional): Тип Позиції. Якщо не вказано: Різне
+            type (str, optional): Тип Позиції. Якщо не вказано: Різнеfdf
         """
         if date != None and date != '':
             try: self.__date = datetime.datetime.strptime(date, '%d.%m.%y')
