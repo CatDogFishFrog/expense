@@ -1,8 +1,10 @@
 from expense import Expense
+from prettytable import PrettyTable
+from prettytable import from_csv
 import os
 import csv
 import argparse
-from prettytable import PrettyTable
+
 
 file_path = ''
 file_name = '\\data.csv'
@@ -33,41 +35,17 @@ def read_file():
     path = file_path+file_name
     if(os.path.exists(path)):
         with open(path, 'r') as file_db:
-            reader = csv.reader(file_db)
-            print('Дата\t\tЦіна\t\tНазва\t\tТип')
-            for row in reader: 
-                print(f'{row[0],}   |{row[1],10}   |{row[2],10}   |{row[3]}')
+            table = from_csv(file_db)
+        print(table)
     else:
-        print('Файла поки що не існує. Спочатку стфоріть файл')    
-        
-#def append_file():
-    
+        print('Файла поки що не існує. Спочатку стфоріть файл') 
 
-def open_file(): # на видалення, а поки що для розбору на запчастини :)
-    if(os.path.exists(file_path)):     
-        with open(file_path, 'a', newline='') as file_db:
-            x = int(input('Скільки строчок введемо? '))
-            for i in range(x):
-                write_file(file_db)             
-    else:
-        print('Файла ще немає. Створити його? (Y/n) ', end='')
-        answer = input()
-
-        with open(file_path, 'w', newline='') as file_db:
-            print('Файл створено. Зараз введемо щось нове.')
-            x = int(input('Скільки строчок введемо? '))
-            for i in range(x):
-                write_file(file_db) 
-
-def write_file(file_db): #також на переробку і на запчастини
-    writer = csv.writer(file_db)
-    print('Додамо нову витрату...\nЗапишіть параметри цього запису (можна залишати пустими)')
-    new_Expense = Expense()
-    new_Expense.date = input('Запишіть дату (якщо залишити пустим буде записано сьогоднішня дата): ')
-    new_Expense.cost = float(input('Запишіть ціну: '))
-    new_Expense.name = input('Запишіть назву: ')
-    new_Expense.type = input('Запишіть тип: ')
-    writer.writerow(new_Expense.list())
+def append_file(name, cost, date=None, type=None):
+    path = file_path+file_name
+    new_row = Expense(name=name, cost=cost, date=date, type=type)
+    with open(path, 'a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(new_row.list())
 
 def main():
     global file_path
@@ -94,10 +72,10 @@ def main():
                         type=str,
                         required=False)
     
-    parser.add_argument('--write', '-w',
+    parser.add_argument('--write', '-w', #Розділити на декілька аргументів
                         help='Записати у файл',
-                        
-                        action='store_true',
+                        nargs=4,
+                        metavar=('name', 'cost', 'date', 'type'),
                         required=False)
     
     parser.add_argument('--read', '-r',
@@ -117,12 +95,12 @@ def main():
     if args.read == True:
         read_file()
         
-    print(file_path+file_name)
+    if args.write != False:
+        print(args.write)
+        name, cost, date, type = args.write
+        append_file(name, float(cost), date, type)
+
 
 if __name__ == '__main__':
 
     main()
-
-
-print(file_path)
-print(file_name)

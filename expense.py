@@ -12,7 +12,7 @@ class Expense:
     default_date = datetime.datetime.now()
     default_type = 'Різне'
     
-    def __init__(self, name:str=None, cost:float=0.0, date:str=None, type:str=None) -> None:
+    def __init__(self, date:str=None, cost:float=0.0, name:str=None, type:str=None) -> None:
         """Створення об'єкта, на який витратили гроші
         Args:
             name (str, optional): Назва позиції.Якщо не вказано: Без назви\n
