@@ -9,26 +9,30 @@ import argparse
 file_path = ''
 file_name = '\\data.csv'
 
-if os.path.exists('name.txt'): #об'єднати у один файл
-    with open('name.txt', 'r') as file:
+if os.path.exists('data.txt'):
+    with open('data.txt', 'r') as file:
+        file_path = file.readline().strip()
         file_name = file.readline()
-
-if os.path.exists('path.txt'): #об'єднати у один файл
-    with open('path.txt', 'r') as file:
-        file_path = file.readline()
         
-def set_file_name(new_name:str): #об'єднати у один файл
+def set_file_name(new_name:str):
     global file_name
     file_name = '\\'+new_name+'.csv'
-    with open('name.txt', 'w') as file:
-        file.write(file_name)
-
-def set_file_path(new_path:str): #об'єднати у один файл
+    replase_row_in_file(1, 'data.txt', file_name)
+    
+def set_file_path(new_path:str):
     global file_path
     file_path = new_path
-    with open('path.txt', 'w') as file:
-        file.write(new_path)
+    replase_row_in_file(0, 'data.txt', new_path)
     
+def replase_row_in_file(row_count:int, file_p:str, new_data:str):
+    with open(file_p, 'r') as file:
+        old_file = file.read()
+    with open(file_p, 'r') as file:
+        old_row = file.readlines()[row_count]
+    new_file = old_file.replace(old_row.strip(), new_data)
+    with open(file_p, 'w') as file:
+        file.write(new_file)
+
 def read_file():
     global file_path
     global file_name
@@ -50,7 +54,7 @@ def append_file(name, cost, date=None, type=None):
 def main():
     global file_path
     global file_name
-    if file_path != '': upd_text =  f'Наразі обрано разташування файлу:\n{file_path}'
+    if file_path != '': upd_text =  f'Наразі обрано разташування файлу:\n{file_path}{file_name}'
     else:               upd_text =   'Наразі не обрано розташування файлу'
     
     parser = argparse.ArgumentParser(
