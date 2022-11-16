@@ -12,7 +12,7 @@ file_name = '\\data.csv'
 if os.path.exists('data.txt'):
     with open('data.txt', 'r') as file:
         file_path = file.readline().strip()
-        file_name = file.readline()
+        file_name = file.readline().strip()
         
 def set_file_name(new_name:str):
     global file_name
@@ -26,12 +26,10 @@ def set_file_path(new_path:str):
     
 def replase_row_in_file(row_count:int, file_p:str, new_data:str):
     with open(file_p, 'r') as file:
-        old_file = file.read()
-    with open(file_p, 'r') as file:
-        old_row = file.readlines()[row_count]
-    new_file = old_file.replace(old_row.strip(), new_data)
+        old_file = file.readlines()
+    old_file[row_count] =  new_data+'\n'
     with open(file_p, 'w') as file:
-        file.write(new_file)
+        file.writelines(old_file)
 
 def read_file():
     global file_path
@@ -52,13 +50,10 @@ def append_file(name, cost, date=None, type=None):
         writer.writerow(new_row.list())
 
 def main():
-    global file_path
-    global file_name
     if file_path != '': upd_text =  f'Наразі обрано разташування файлу:\n{file_path}{file_name}'
     else:               upd_text =   'Наразі не обрано розташування файлу'
     
-    parser = argparse.ArgumentParser(
-                                    description=f'Програма обліку домашніх вітрат. {upd_text}',
+    parser = argparse.ArgumentParser(description=f'Програма обліку домашніх вітрат. {upd_text}',
                                     prog='Expense',
                                     usage='expens [options]',
                                     epilog='Ну все, кінеь',
@@ -68,28 +63,36 @@ def main():
                         help='Обрати розташування файла',
                         default=None,
                         type=str,
-                        required=False)
-    
+                        required=False
+                        )
     parser.add_argument('--name', '-n',
                         help='Обрати назву файла',
                         default=None,
                         type=str,
-                        required=False)
-    
-    parser.add_argument('--write', '-w', #Розділити на декілька аргументів
-                        help='Записати у файл',
-                        nargs=4,
-                        metavar=('name', 'cost', 'date', 'type'),
-                        required=False)
-    
+                        required=False
+                        )
+    parser.add_argument('--write', '-w',
+                        help='Записати у файл нову строку. Якщо не вказано дату, то записує сьогоднішню. Якщо не вказано тип, то записує "Різне" Приклад: -w <name> <cost> (optional): -d <date> -t <type>',
+                        nargs=2,
+                        metavar=('name', 'cost'),
+                        required=False
+                        )
+    parser.add_argument('--date', '-d',
+                        help='Доповнення до аргументу WRITE, дозволяє записати дату запису',
+                        required=False
+                        )  
+    parser.add_argument('--type', '-t',
+                        help='Доповнення до аргументу WRITE, дозволяє додати тип запису',
+                        required=False
+                        )
     parser.add_argument('--read', '-r',
-                        help="Прочитати файл у обраному шляху",
+                        help="Прочитати файл",
                         action='store_true',
-                        required=False)
+                        required=False
+                        )
     
     args = parser.parse_args()
-    
-    
+        
     if args.path != None:
         set_file_path(args.path)
         
@@ -100,11 +103,16 @@ def main():
         read_file()
         
     if args.write != False:
-        print(args.write)
-        name, cost, date, type = args.write
-        append_file(name, float(cost), date, type)
+        name, cost = args.write
+        if args.date != False and args.type != False:
+            append_file(name, float(cost), args.date, args.type)
+        elif args.date != False:
+            append_file(name, float(cost), args.date)
+        elif args.type != False:
+            append_file(name, float(cost), type=args.type)
+        else: append_file(name, float(cost))
+            
 
 
 if __name__ == '__main__':
-
     main()
