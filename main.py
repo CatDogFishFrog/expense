@@ -1,6 +1,7 @@
 from expense import Expense
 from prettytable import from_csv
 from prettytable import PrettyTable
+from datetime import datetime
 import os
 import csv
 import argparse
@@ -31,15 +32,29 @@ def replase_row_in_file(row_count:int, file_p:str, new_data:str):
     with open(file_p, 'w') as file:
         file.writelines(old_file)
 
-def print_table_with_sort(key:str, revers = False):
+def print_table_with_sort(key:str = None, revers = False, range_start = None, range_end = None):
     path = file_path + file_name
+    if range_start != None:
+        if range_end != None:
+            range_end_d = datetime.strptime(range_end, Expense.format_date)
+            range_start_d = datetime.strptime(range_start, Expense.format_date)
+        else:
+            range_start_d = datetime.strptime(range_start, Expense.format_date)
+            range_end_d = range_start_d
+        
     if(os.path.exists(path)):
         table = PrettyTable(field_names=['Дата', 'Ціна', 'Назва', 'Тип'])
         with open(path, 'r') as file:
             reader = csv.reader(file, delimiter=';')
-            for line in reader:
-                line[1] = int(line[1])
-                table.add_row(line)
+            if range_start != None:
+                for line in reader:
+                    if datetime.strptime(line[0], Expense.format_date) >= range_start_d and datetime.strptime(line[0], Expense.format_date) <= range_end_d:
+                        line[1] = int(line[1])
+                        table.add_row(line)
+            else:
+                for line in reader:
+                    line[1] = int(line[1])
+                    table.add_row(line)
             table.align["Ціна"] = 'r'
             table.align["Назва"] = 'l'
         try: 
@@ -50,7 +65,7 @@ def print_table_with_sort(key:str, revers = False):
         print(table)
     else: print('Файла поки що не існує. Спочатку стфоріть файл') 
 
-def print_table_without_sort():
+def print_table_without_sort(): # не потрібна
     path = file_path+file_name
     if(os.path.exists(path)):
         with open(path, 'r') as file:
@@ -59,6 +74,7 @@ def print_table_without_sort():
         table.align["Назва"] = 'l'
         table.sortby = 'Ціна'
 
+    
         print(table)
     else:
         print('Файла поки що не існує. Спочатку стфоріть файл') 
@@ -146,7 +162,7 @@ def main():
         if args.sortcost != False: print_table_with_sort('Ціна', args.revers)
         elif args.sortname != False: print_table_with_sort('Назва', args.revers)
         elif args.sortdate != False: print_table_with_sort('Дата', args.revers)
-        else: print_table_without_sort()
+        else:  print_table_with_sort(None, args.revers)
         
     if args.write != False:
         name, cost = args.write
@@ -162,3 +178,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+    
+print_table_with_sort('Дата', False, '20.09.2022', '30.09.2022')
