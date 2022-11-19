@@ -71,6 +71,10 @@ class CommandLine:
                             nargs='+',
                             required=False
                             )
+        parser.add_argument('--ty',
+                            help='Доповнення до аргументу READ. Виводить лише окремий тип',
+                            default=None,
+                            required=False)
         
         args = parser.parse_args()
             
@@ -90,12 +94,14 @@ class CommandLine:
                     range_end = args.range[1]
                 except:
                     range_end = None
-            
-            if args.sortcost != False: Table.print_table_with_sort('Ціна', args.revers, range_start,  range_end)
-            elif args.sortname != False: Table.print_table_with_sort('Назва', args.revers, range_start,  range_end)
-            elif args.sortdate != False: Table.print_table_with_sort('Дата', args.revers, range_start,  range_end)
-            else:  Table.print_table_with_sort(None, args.revers, range_start,  range_end)
-            
+                    
+            if args.sortcost != False: sort = 'Ціна'
+            elif args.sortname != False: sort = 'Назва'
+            elif args.sortdate != False: sort = 'Дата'
+            else: sort = 'None'
+                
+            Table.print_table_with_sort(sort, args.revers, range_start,  range_end, args.ty)
+    
         if args.write != False:
             name, cost = args.write
             if args.date != False and args.type != False:

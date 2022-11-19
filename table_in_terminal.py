@@ -32,7 +32,7 @@ class Table:
         with open(file_p, 'w') as file:
             file.writelines(old_file)
 
-    def print_table_with_sort(key:str = None, revers = False, range_start = None, range_end = None):
+    def print_table_with_sort(key:str = None, revers = False, range_start = None, range_end = None, types = None):
         path = Table.file_path + Table.file_name
         if range_start != None:
             if range_end != None:
@@ -41,14 +41,17 @@ class Table:
             else:
                 range_start_d = datetime.strptime(range_start, Expense.format_date)
                 range_end_d = range_start_d
-            
+        
         if(os.path.exists(path)):
             table = PrettyTable(field_names=['Дата', 'Ціна', 'Назва', 'Тип'])
             with open(path, 'r') as file:
                 reader = csv.reader(file, delimiter=';')
+                type_check = True
                 if range_start != None:
                     for line in reader:
-                        if datetime.strptime(line[0], Expense.format_date) >= range_start_d and datetime.strptime(line[0], Expense.format_date) <= range_end_d:
+                        if types != None:
+                            type_check = types == line[3]
+                        if datetime.strptime(line[0], Expense.format_date) >= range_start_d and datetime.strptime(line[0], Expense.format_date) <= range_end_d and type_check:
                             line[1] = int(line[1])
                             table.add_row(line)
                 else:
