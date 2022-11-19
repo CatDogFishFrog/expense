@@ -98,7 +98,7 @@ class CommandLine:
             if args.sortcost != False: sort = 'Ціна'
             elif args.sortname != False: sort = 'Назва'
             elif args.sortdate != False: sort = 'Дата'
-            else: sort = 'None'
+            else: sort = None
                 
             Table.print_table_with_sort(sort, args.revers, range_start,  range_end, args.ty)
     
