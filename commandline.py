@@ -105,10 +105,10 @@ class CommandLine:
         if args.write != False:
             name, cost = args.write
             if args.date != False and args.type != False:
-                Table.append_file(name, float(cost), args.date, args.type)
+                Table.append_file(name, int(cost), args.date, args.type)
             elif args.date != False:
-                Table.append_file(name, float(cost), args.date)
+                Table.append_file(name, int(cost), args.date)
             elif args.type != False:
-                Table.append_file(name, float(cost), type=args.type)
-            else: Table.append_file(name, float(cost))
+                Table.append_file(name, int(cost), type=args.type)
+            else: Table.append_file(name, int(cost))
     

@@ -17,13 +17,11 @@ class Table:
             file_name = file.readline().strip()
             
     def set_file_name(new_name:str):
-        global file_name
-        file_name = '\\'+new_name+'.csv'
-        Table.replase_row_in_file(1, 'data.txt', file_name)
+        Table.file_name = '\\'+new_name+'.csv'
+        Table.replase_row_in_file(1, 'data.txt', Table.file_name)
         
     def set_file_path(new_path:str):
-        global file_path
-        file_path = new_path
+        Table.file_path = new_path
         Table.replase_row_in_file(0, 'data.txt', new_path)
         
     def replase_row_in_file(row_count:int, file_p:str, new_data:str):
@@ -37,7 +35,9 @@ class Table:
         path = Table.file_path + Table.file_name
         if range_start != None:
             range_start_d = datetime.strptime(range_start, Expense.format_date)
-            if range_end == None:
+            if range_end != None:
+                range_end_d = datetime.strptime(range_end, Expense.format_date)
+            else:
                 range_end_d = range_start_d
                 
         
@@ -93,8 +93,7 @@ class Table:
                         if line_date > stats['date_end']: stats['date_end'] = line_date
                         if line_date < stats['date_start']: stats['date_start'] = line_date
                         table.add_row(line)
-            stats['days'] = stats['date_end'] - stats['date_start']
-            stats['Average_day_cost'] = stats['cost_sum'] / stats['days'].days
+            
             
             table.align["Ціна"] = 'r'
             table.align["Назва"] = 'l'
@@ -106,12 +105,15 @@ class Table:
                     print('Такого стовпця не існує, сортування відміняється')
             table.reversesort = revers
             print(table)
-            print(f'Виведено дати з {datetime.strftime(stats["date_start"], Expense.format_date)} до {datetime.strftime(stats["date_end"], Expense.format_date)}. Це {stats["days"].days} днів.\n\nЗа цей проміжок витрачено {stats["cost_sum"]} грн. Це у середньому {round(stats["Average_day_cost"])} грн. {round((stats["Average_day_cost"]%1)*100)} к. за день.\n\nА найбільша витрата була зроблена {stats["bigest_expanse_date"]}, і це "{stats["bigest_expanse_name"]}", що коштувало {stats["bigest_expanse"]} грн.\n')
+            stats['days'] = stats['date_end'] - stats['date_start'] 
+            stats['Average_day_cost'] = stats['cost_sum'] / (stats['days'].days+1)
+            print(f'Виведено дати з {datetime.strftime(stats["date_start"], Expense.format_date)} до {datetime.strftime(stats["date_end"], Expense.format_date)}. Це {stats["days"].days+1} днів.\n\nЗа цей проміжок витрачено {stats["cost_sum"]} грн. Це у середньому {round(stats["Average_day_cost"])} грн. {round((stats["Average_day_cost"]%1)*100)} к. на день.\n\nА найбільша витрата була зроблена {stats["bigest_expanse_date"]}, і це "{stats["bigest_expanse_name"]}", що коштувало {stats["bigest_expanse"]} грн.\n')
         else: print('Файла поки що не існує. Спочатку стфоріть файл') 
 
     def append_file(name, cost, date=None, type=None):
-        path = file_path+file_name
+
+        path = Table.file_path+Table.file_name
         new_row = Expense(name=name, cost=cost, date=date, type=type)
         with open(path, 'a', newline='') as file:
-            writer = csv.writer(file)
+            writer = csv.writer(file, delimiter=';')
             writer.writerow(new_row.list())
