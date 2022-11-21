@@ -100,7 +100,7 @@ class CommandLine:
             elif args.sortdate != False: sort = 'Дата'
             else: sort = None
                 
-            Table.print_table_with_sort(sort, args.revers, range_start,  range_end, args.ty)
+            print(Table.table_from_database(sort, args.revers, range_start,  range_end, args.ty, for_telegram=False))
     
         if args.write != False:
             name, cost = args.write

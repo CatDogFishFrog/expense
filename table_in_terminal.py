@@ -1,9 +1,7 @@
-import os
-import csv
-from prettytable import PrettyTable
+import os, csv
+from prettytable import PrettyTable, SINGLE_BORDER
 from datetime import datetime
 from expense import Expense
-from prettytable import SINGLE_BORDER
 
 class Table:
     pass
@@ -31,84 +29,101 @@ class Table:
         with open(file_p, 'w') as file:
             file.writelines(old_file)
 
-    def print_table_with_sort(key:str = None, revers = False, range_start = None, range_end = None, types = None):
+    def table_from_database(sort_key:str = None,
+                    revers = False,
+                    range_start = None,
+                    range_end = None,
+                    types = None,
+                    colomns_to_print:list = ["Дата", "Ціна", "Назва"],
+                    for_telegram = True):
+        
         path = Table.file_path + Table.file_name
+        table = PrettyTable(field_names=colomns_to_print) # Створення таблиці
+        stats = {'cost_sum':0, # Підготовка саттистики
+                'date_start':None,
+                'date_end':None,
+                'bigest_expanse':0,
+                'bigest_expanse_name':'',
+                'bigest_expanse_date':'',
+                'Average_day_cost':0,
+                'days':None}
+        
+        ##########  ПІДГОТОВКА ПЕРЕВІРОК  ##########
+        type_check = True
+        date_check = True
+        for_once = True
+        
         if range_start != None:
             range_start_d = datetime.strptime(range_start, Expense.format_date)
             if range_end != None:
                 range_end_d = datetime.strptime(range_end, Expense.format_date)
             else:
                 range_end_d = range_start_d
-                
+        ##########  КІНЕЛЬ ПІДГОТОВКИ ПЕРЕВІРОК  ##########
         
-        if(os.path.exists(path)):
-            table = PrettyTable(field_names=['Дата', 'Ціна', 'Назва', 'Тип'])
-            with open(path, 'r') as file:
-                reader = csv.reader(file, delimiter=';')
-                stats = {'cost_sum':0,
-                         'date_start':None,
-                         'date_end':None,
-                         'bigest_expanse':0,
-                         'bigest_expanse_name':'',
-                         'bigest_expanse_date':'',
-                         'Average_day_cost':0,
-                         'days':None}
-                type_check = True
-                for_once = True
-                if range_start != None:
+        ##########  ФОРМУВАННЯ ТАБЛИЦІ  ##########  
+        with open(path, 'r') as file: 
+            reader = csv.DictReader(file, delimiter=';', fieldnames=["Дата", "Ціна", "Назва", "Тип"])
+            for line in reader:
+                ##########  ПЕРЕВІРКА  ##########
+                if types != None:
+                    type_check = line["Тип"] in types
                     
-                    for line in reader:
+                line_date = datetime.strptime(line["Дата"], Expense.format_date)
+                if range_start != None:
+                    date_check = line_date >= range_start_d and line_date <= range_end_d
+                ##########  КІНЕЛЬ ПЕРЕВІРКИ  ##########
+                
+                new_line = []
+                if type_check and date_check:
+                    ##########  РОЗРАХУНОК СТАТИСТИКИ  ##########
+                    line["Ціна"] = int(line["Ціна"])
+                    stats['cost_sum']+=line["Ціна"]
+                    if for_once:
+                        stats['date_end'] = line_date
+                        stats['date_start'] = line_date
+                        for_once = False
+                    if stats['bigest_expanse'] < line["Ціна"]:
+                        stats['bigest_expanse'] = line["Ціна"]
+                        stats['bigest_expanse_name'] = line["Назва"]
+                        stats['bigest_expanse_date'] = line["Дата"]
+                    if line_date > stats['date_end']: stats['date_end'] = line_date
+                    if line_date < stats['date_start']: stats['date_start'] = line_date
+                    ##########  КІНЕЦЬ РОЗРАХУНКУ СТАТИСТИКИ  ##########
+                    
+                    if "Дата" in colomns_to_print and for_telegram: # Зменшення розміру дати для телеграму
+                        line['Дата'] = datetime.strftime(line_date, '%d.%m')
+                    
+                    for i in colomns_to_print:
+                        new_line.append(line[i])
                         
-                        if types != None:
-                            type_check = types == line[3]
-                        
-                        line_date = datetime.strptime(line[0], Expense.format_date)  
-                        if line_date >= range_start_d and line_date <= range_end_d and type_check:
-                            line[1] = int(line[1])
-                            stats['cost_sum']+=line[1]
-                            if for_once:
-                                stats['date_end'] = line_date
-                                stats['date_start'] = line_date
-                                for_once = False
-                            if stats['bigest_expanse'] < line[1]:
-                                stats['bigest_expanse'] = line[1]
-                                stats['bigest_expanse_name'] = line[2]
-                                stats['bigest_expanse_date'] = line[0]
-                            if line_date > stats['date_end']: stats['date_end'] = line_date
-                            if line_date < stats['date_start']: stats['date_start'] = line_date
-                            table.add_row(line)
-                else:
-                    for line in reader:
-                        line_date = datetime.strptime(line[0], Expense.format_date) 
-                        line[1] = int(line[1])
-                        stats['cost_sum']+=line[1]
-                        if for_once:
-                            stats['date_end'] = line_date
-                            stats['date_start'] = line_date
-                            for_once = False
-                        if stats['bigest_expanse'] < line[1]:
-                                stats['bigest_expanse'] = line[1]
-                                stats['bigest_expanse_name'] = line[2]
-                                stats['bigest_expanse_date'] = line[0]
-                        if line_date > stats['date_end']: stats['date_end'] = line_date
-                        if line_date < stats['date_start']: stats['date_start'] = line_date
-                        table.add_row(line)
-            
-            
-            table.align["Ціна"] = 'r'
+                    table.add_row(new_line)
+        
+        ##########  СОРТУВАННЯ ТА ОФОРМЛЕННЯ  ##########
+        table.set_style(SINGLE_BORDER)
+        if sort_key != None:
+            try: 
+                table.sortby = sort_key    
+            except:
+                print('Спроба сортування за стовбцем, якого не існує')
+        table.reversesort = revers
+        stats['days'] = stats['date_end'] - stats['date_start'] 
+        stats['Average_day_cost'] = stats['cost_sum'] / (stats['days'].days+1)
+        if 'Назва' in colomns_to_print:
             table.align["Назва"] = 'l'
-            table.set_style(SINGLE_BORDER)
-            if key != None:
-                try: 
-                    table.sortby = key    
-                except:
-                    print('Такого стовпця не існує, сортування відміняється')
-            table.reversesort = revers
-            print(table)
-            stats['days'] = stats['date_end'] - stats['date_start'] 
-            stats['Average_day_cost'] = stats['cost_sum'] / (stats['days'].days+1)
-            print(f'Виведено дати з {datetime.strftime(stats["date_start"], Expense.format_date)} до {datetime.strftime(stats["date_end"], Expense.format_date)}. Це {stats["days"].days+1} днів.\n\nЗа цей проміжок витрачено {stats["cost_sum"]} грн. Це у середньому {round(stats["Average_day_cost"])} грн. {round((stats["Average_day_cost"]%1)*100)} к. на день.\n\nА найбільша витрата була зроблена {stats["bigest_expanse_date"]}, і це "{stats["bigest_expanse_name"]}", що коштувало {stats["bigest_expanse"]} грн.\n')
-        else: print('Файла поки що не існує. Спочатку стфоріть файл') 
+        if 'Ціна' in colomns_to_print:
+            table.align["Ціна"] = 'l'
+        
+        if for_telegram:
+            telegram_table = ''
+            split_table = str(table).split('\n')
+            for line in split_table:
+                telegram_table += ('<code>' + line + '</code>' + '\n')
+            telegram_table += f'\nВиведено дати з {datetime.strftime(stats["date_start"], Expense.format_date)} до {datetime.strftime(stats["date_end"], Expense.format_date)}. Це {stats["days"].days+1} днів.\n\nЗа цей проміжок витрачено {stats["cost_sum"]} грн. Це у середньому {round(stats["Average_day_cost"])} грн. {round((stats["Average_day_cost"]%1)*100)} к. на день.\n\nА найбільша витрата була зроблена {stats["bigest_expanse_date"]}, і це "{stats["bigest_expanse_name"]}", що коштувало {stats["bigest_expanse"]} грн.\n'
+            return telegram_table
+        else:
+            return str(table)+f'\nВиведено дати з {datetime.strftime(stats["date_start"], Expense.format_date)} до {datetime.strftime(stats["date_end"], Expense.format_date)}. Це {stats["days"].days+1} днів.\n\nЗа цей проміжок витрачено {stats["cost_sum"]} грн. Це у середньому {round(stats["Average_day_cost"])} грн. {round((stats["Average_day_cost"]%1)*100)} к. на день.\n\nА найбільша витрата була зроблена {stats["bigest_expanse_date"]}, і це "{stats["bigest_expanse_name"]}", що коштувало {stats["bigest_expanse"]} грн.\n'
+                
 
     def append_file(name, cost, date=None, type=None):
 
